@@ -4,6 +4,11 @@ const GIFEncoder = require('gif-encoder-2')
 const fs = require('fs');
 
 const dirPic = 'src/\\/pictures/\\/';
+const fontSize = 62;
+
+const amountOfFrames = 10; // Set to the amount of pictures in the gif folder
+const gifSpeed = 125;
+
 let lastImage = 0;
 
 module.exports = {
@@ -36,14 +41,8 @@ module.exports = {
     callback: async (client, interaction) => {
         await interaction.deferReply();
 
-        const fontSize = 62;
-
-        const amountOfFrames = 10; // Set to the amount of pictures in the gif folder
-        const gifSpeed = 125;
-
         const userText = interaction.options.get('its');
         chosenCategory = interaction.options.getString('category') ?? 'randomCategory'; // If the user does not choose a category, set category to randomCategory
-
         
         if (chosenCategory === 'randomCategory') { // Choose a random category if the user didn't pick one
             randomNum = Math.floor(Math.random() * 2);
