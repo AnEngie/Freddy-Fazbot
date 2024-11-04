@@ -1,8 +1,8 @@
-const { AttachmentBuilder, ApplicationCommandOptionType, ApplicationCommand } = require('discord.js');
+const { AttachmentBuilder, ApplicationCommandOptionType, ApplicationCommand, SlashCommandBuilder } = require('discord.js');
 const { createCanvas, loadImage } = require('@napi-rs/canvas');
 
 let lastImage = 0;
-let fontSize = 75;
+
 
 module.exports = {
     name: 'sparkle',
@@ -43,11 +43,15 @@ module.exports = {
 
         context.drawImage(sparkleOnGif, 0, 0, canvas.width, canvas.height)
 
+        let fontSize = 75;
+        let resizedTimes = 0;
+        
         do {
             // Assign the font to the context and decrement it so it can be measured again
             context.font = `${fontSize -= 10}px Script MT Bold`;
+            resizedTimes++
             // Compare pixel width of the text to the canvas minus the approximate avatar size
-        } while (context.measureText(day.value).width > canvas.width - 300);
+        } while (context.measureText(day.value).width > canvas.width - 300 && resizedTimes < 3);
 
         context.fillStyle = '#eb02b4'
         context.fillText(day.value, 225, 555)
