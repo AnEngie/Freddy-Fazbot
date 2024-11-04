@@ -1,8 +1,8 @@
 const { AttachmentBuilder } = require('discord.js');
 const { createCanvas, loadImage } = require('@napi-rs/canvas')
-let allGuusPics = require('../../utils/getAllGuusPics');
-const image_array = allGuusPics.getAllPics();
-
+const fs = require('fs');
+const dir = 'src/\\/pictures/\\/guus';
+guus_array = fs.readdirSync(dir) 
 
 let lastImage = 0;
 
@@ -17,15 +17,15 @@ module.exports = {
     callback: async (client, interaction) => {
         await interaction.deferReply();
 
-        let selectedImage = image_array[Math.floor(Math.random() * image_array.length)];
+        let selectedImage = guus_array[Math.floor(Math.random() * guus_array.length)];
 
         if(lastImage == selectedImage)
         {
-            selectedImage = image_array[Math.floor(Math.random() * image_array.length)];
+            selectedImage = guus_array[Math.floor(Math.random() * guus_array.length)];
         }
         lastImage = selectedImage;
 
-        const guusImage = await loadImage(`src/\\/pictures/\\/${selectedImage}`)
+        const guusImage = await loadImage(`${dir}/${selectedImage}`)
 
         const canvas = createCanvas(guusImage.width, guusImage.height);
         const context = canvas.getContext('2d');

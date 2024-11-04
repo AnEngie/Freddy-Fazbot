@@ -3,7 +3,6 @@ const { createCanvas, loadImage } = require('@napi-rs/canvas');
 
 let lastImage = 0;
 
-
 module.exports = {
     name: 'sparkle',
     description: 'don\'t forget to be yourself',
@@ -13,6 +12,21 @@ module.exports = {
             description: 'day of the week',
             type: ApplicationCommandOptionType.String,
             required: true,
+        },
+        {
+            name: 'picture',
+            description: 'WHO',
+            type: ApplicationCommandOptionType.String,
+            choices: [
+                {
+                    name: 'Guus',
+                    value: 'guus',
+                },
+                {
+                    name: 'Man',
+                    value: 'man',
+                }
+            ],
         }
     ],
     // devOnly: Boolean,
@@ -23,17 +37,38 @@ module.exports = {
         await interaction.deferReply();
 
         const day = interaction.options.get('day');
+        let chosenCategory = interaction.options.getString('picture') ?? 'notchosen';
+        const fs = require('fs');
+        let dir;
 
-        let selectedImage = image_array[Math.floor(Math.random() * image_array.length)];
+        if (chosenCategory === 'notchosen') {
+            randomNum = Math.floor(Math.random() * 2);
+            console.log(randomNum)
+
+            switch (randomNum) {
+                case 0:
+                    chosenCategory = 'guus';
+                    break;
+                case 1:
+                    chosenCategory = 'man';
+                    break;
+            }
+        }
+
+        dir = `src/\\/pictures/\\/${chosenCategory}`;
+
+        sparkle_array = fs.readdirSync(dir)
+
+        let selectedImage = sparkle_array[Math.floor(Math.random() * sparkle_array.length)];
 
         if (lastImage == selectedImage) {
-            selectedImage = image_array[Math.floor(Math.random() * image_array.length)];
+            selectedImage = sparkle_array[Math.floor(Math.random() * sparkle_array.length)];
         }
         lastImage = selectedImage;
 
         const sparkleOnGif = await loadImage(`src/\\/sparkleOnGif/\\/sparkleOn.png`)
 
-        const guusImage = await loadImage(`src/\\/pictures/\\/${selectedImage}`)
+        const guusImage = await loadImage(`src/\\/pictures/\\/${chosenCategory}/\\/${selectedImage}`)
 
         const canvas = createCanvas(sparkleOnGif.width, sparkleOnGif.height);
         const context = canvas.getContext('2d');
@@ -45,7 +80,7 @@ module.exports = {
 
         let fontSize = 75;
         let resizedTimes = 0;
-        
+
         do {
             // Assign the font to the context and decrement it so it can be measured again
             context.font = `${fontSize -= 10}px Script MT Bold`;
