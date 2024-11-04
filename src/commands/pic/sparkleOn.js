@@ -1,21 +1,24 @@
-const { AttachmentBuilder, ApplicationCommandOptionType, ApplicationCommand, SlashCommandBuilder } = require('discord.js');
+const { AttachmentBuilder, ApplicationCommandOptionType } = require('discord.js');
 const { createCanvas, loadImage } = require('@napi-rs/canvas');
+const GIFEncoder = require('gif-encoder-2')
+const fs = require('fs');
 
+const dirPic = 'src/\\/pictures/\\/';
 let lastImage = 0;
 
 module.exports = {
     name: 'sparkle',
-    description: 'don\'t forget to be yourself',
+    description: 'don\'t forget to be yourself!',
     options: [
         {
-            name: 'day',
-            description: 'day of the week',
+            name: 'its',
+            description: 'why do you sparkle',
             type: ApplicationCommandOptionType.String,
             required: true,
         },
         {
-            name: 'picture',
-            description: 'WHO',
+            name: 'category',
+            description: 'which category you want as a background. Leave blank for random',
             type: ApplicationCommandOptionType.String,
             choices: [
                 {
@@ -29,19 +32,20 @@ module.exports = {
             ],
         }
     ],
-    // devOnly: Boolean,
-    // testOnly: Boolean,
-    // deleted: true,
 
     callback: async (client, interaction) => {
         await interaction.deferReply();
 
-        const day = interaction.options.get('day');
-        let chosenCategory = interaction.options.getString('picture') ?? 'notchosen';
-        const fs = require('fs');
-        let dir;
+        const fontSize = 62;
 
-        if (chosenCategory === 'notchosen') {
+        const amountOfFrames = 10; // Set to the amount of pictures in the gif folder
+        const gifSpeed = 125;
+
+        const userText = interaction.options.get('its');
+        chosenCategory = interaction.options.getString('category') ?? 'randomCategory'; // If the user does not choose a category, set category to randomCategory
+
+        
+        if (chosenCategory === 'randomCategory') { // Choose a random category if the user didn't pick one
             randomNum = Math.floor(Math.random() * 2);
             console.log(randomNum)
 
@@ -55,44 +59,55 @@ module.exports = {
             }
         }
 
-        dir = `src/\\/pictures/\\/${chosenCategory}`;
+        const dir = `${dirPic}${chosenCategory}`;
 
-        sparkle_array = fs.readdirSync(dir)
+        const image_array = fs.readdirSync(dir) // Return how many images are in the chosen folder
 
-        let selectedImage = sparkle_array[Math.floor(Math.random() * sparkle_array.length)];
+        let selectedImage = image_array[Math.floor(Math.random() * image_array.length)];
 
-        if (lastImage == selectedImage) {
-            selectedImage = sparkle_array[Math.floor(Math.random() * sparkle_array.length)];
+        if (lastImage == selectedImage) { // Make sure the bot doesn't choose the same pictures every time
+            selectedImage = image_array[Math.floor(Math.random() * image_array.length)];
         }
         lastImage = selectedImage;
 
-        const sparkleOnGif = await loadImage(`src/\\/sparkleOnGif/\\/sparkleOn.png`)
+        const sparkleOnGif = await loadImage(`${dirPic}sparkleOnGif/\\/sparkleOn1.png`)
 
-        const guusImage = await loadImage(`src/\\/pictures/\\/${chosenCategory}/\\/${selectedImage}`)
+        const width = sparkleOnGif.width
+        const height = sparkleOnGif.height
 
         const canvas = createCanvas(sparkleOnGif.width, sparkleOnGif.height);
-        const context = canvas.getContext('2d');
+        const ctx = canvas.getContext('2d')
 
-        // This uses the canvas dimensions to stretch the image onto the entire canvas
-        context.drawImage(guusImage, 0, 0, canvas.width, canvas.height);
+        const guusImage = await loadImage(`${dirPic}${chosenCategory}/\\/${selectedImage}`)
 
-        context.drawImage(sparkleOnGif, 0, 0, canvas.width, canvas.height)
+        function drawBackground() {
+            ctx.drawImage(guusImage, 0, 0, width, height);
+        }
 
-        let fontSize = 75;
-        let resizedTimes = 0;
+        const encoder = new GIFEncoder(width, height)
+        encoder.setDelay(gifSpeed)
+        encoder.start() // Start making the gif
+
+        let frame = 1;
 
         do {
-            // Assign the font to the context and decrement it so it can be measured again
-            context.font = `${fontSize -= 10}px Script MT Bold`;
-            resizedTimes++
-            // Compare pixel width of the text to the canvas minus the approximate avatar size
-        } while (context.measureText(day.value).width > canvas.width - 300 && resizedTimes < 3);
+            drawBackground() // Add the background to the frame
+            let sparkleFrame = await loadImage(`${dirPic}sparkleOnGif/\\/sparkleOn${frame}.png`) // Add the frame of the gif on top of the background
+            ctx.drawImage(sparkleFrame, 0, 0, width, height)
 
-        context.fillStyle = '#eb02b4'
-        context.fillText(day.value, 225, 555)
+            ctx.font = `${fontSize}px Script MT Bold`;
+            ctx.fillStyle = '#eb02b4'
+            ctx.fillText(userText.value, 220, 550) // Add the text the user requested
 
-        // Use the helpful Attachment class structure to process the file for you
-        const attachment = new AttachmentBuilder(await canvas.encode('png'), { name: 'sparkle-on.png' });
+            encoder.addFrame(ctx)
+            frame++ // Count to the next frame
+        } while (frame < amountOfFrames);
+
+        encoder.finish()
+
+        const buffer = encoder.out.getData()
+
+        const attachment = new AttachmentBuilder(await buffer, { name: 'sparkle-on.gif' });
 
         interaction.editReply({ files: [attachment] });
     },
