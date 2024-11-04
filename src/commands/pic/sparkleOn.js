@@ -46,7 +46,6 @@ module.exports = {
         
         if (chosenCategory === 'randomCategory') { // Choose a random category if the user didn't pick one
             randomNum = Math.floor(Math.random() * 2);
-            console.log(randomNum)
 
             switch (randomNum) {
                 case 0:
@@ -87,7 +86,7 @@ module.exports = {
         encoder.setDelay(gifSpeed)
         encoder.start() // Start making the gif
 
-        let frame = 1;
+        let frame = 1; // !!!Remake with fs!!
 
         do {
             drawBackground() // Add the background to the frame
